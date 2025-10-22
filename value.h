@@ -11,6 +11,7 @@ typedef struct Value {
     struct Value* prev[2];
     int total_prev;
     Operation op;
+    bool is_alloc;
 } Value;
 
 
@@ -18,7 +19,6 @@ typedef struct Value {
 Value cg_value(double data);
 Value cg_value_p(double data, Value* prev);
 Value cg_value_pp(double data, Value* prev_1, Value* prev_2);
-void cg_free(Value* value);
 
 // Operations
 Value cg_add(Value* val_1, Value* val_2);

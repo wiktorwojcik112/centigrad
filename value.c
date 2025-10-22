@@ -11,6 +11,7 @@ Value cg_value(double data) {
     value.grad = 0;
     value.total_prev = 0;
     value.op = NONE;
+    value.is_alloc = false;
 
     value.prev[0] = NULL;
     value.prev[1] = NULL;
@@ -25,6 +26,7 @@ Value cg_value_p(double data, Value* prev) {
     value.grad = 0;
     value.total_prev = 1 + prev->total_prev;
     value.op = NONE;
+    value.is_alloc = false;
 
     value.prev[0] = prev;
     value.prev[1] = NULL;
@@ -39,31 +41,12 @@ Value cg_value_pp(double data, Value* prev_1, Value* prev_2) {
     value.grad = 0;
     value.total_prev = 2 + prev_1->total_prev + prev_2->total_prev;
     value.op = NONE;
+    value.is_alloc = false;
 
     value.prev[0] = prev_1;
     value.prev[1] = prev_2;
 
     return value;
-}
-
-// Frees just the provided value without freeing the previous values.
-void cg_free(Value* value) {
-    free(value);
-}
-
-// Frees the entire tree below and including the provided value.
-void cg_free_rec(Value* value) {
-    if (value->prev[0]) {
-        cg_free_rec(value->prev[0]); 
-        value->prev[0] = NULL;
-    }
-
-    if (value->prev[1]) {
-        cg_free_rec(value->prev[1]); 
-        value->prev[1] = NULL;
-    }
-
-    free(value);
 }
 
 // ops
@@ -95,6 +78,7 @@ Value cg_sub(Value* val_1, Value* val_2) {
     zero->total_prev = 0;
     zero->prev[0] = NULL;
     zero->prev[1] = NULL;
+    zero->is_alloc = true;
 
     neg_2->data = -val_2->data;
     neg_2->grad = 0;
@@ -115,6 +99,7 @@ Value cg_div(Value* val_1, Value* val_2) {
     inv_2->total_prev = 0;
     inv_2->prev[0] = NULL;
     inv_2->prev[1] = NULL;
+    inv_2->is_alloc = true;
 
     return cg_mul(val_1, inv_2);
 }
