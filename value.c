@@ -46,7 +46,25 @@ Value cg_value_pp(double data, Value* prev_1, Value* prev_2) {
     return value;
 }
 
-void cg_free(Value* value) { }
+// Frees just the provided value without freeing the previous values.
+void cg_free(Value* value) {
+    free(value);
+}
+
+// Frees the entire tree below and including the provided value.
+void cg_free_rec(Value* value) {
+    if (value->prev[0]) {
+        cg_free_rec(value->prev[0]); 
+        value->prev[0] = NULL;
+    }
+
+    if (value->prev[1]) {
+        cg_free_rec(value->prev[1]); 
+        value->prev[1] = NULL;
+    }
+
+    free(value);
+}
 
 // ops
 Value cg_add(Value* val_1, Value* val_2) {
