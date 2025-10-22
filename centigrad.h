@@ -4,4 +4,5 @@
 #include "value.h"
 #include "topo.h"
 #include "backward.h"
+#include "ops.h"
 #endif
