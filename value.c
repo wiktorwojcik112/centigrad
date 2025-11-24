@@ -4,7 +4,6 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <assert.h>
-#include <cstdlib>
 
 int CG_ERRNO;
 
@@ -29,7 +28,7 @@ Value cg_value(double data) {
     return value;
 }
 
-Value cg_tensor(double[] data, double[] shape, int n_dim) {
+Value cg_tensor(double* data, int* shape, int n_dim) {
     Value value;
 
     int total_el = 1;
@@ -59,7 +58,7 @@ Value cg_tensor(double[] data, double[] shape, int n_dim) {
     return value;
 }
 
-Value cg_zeroes(double[] shape, int n_dim) {
+Value cg_zeroes(int* shape, int n_dim) {
     int total_el = 1;
     for (int i = 0; i < n_dim; i++) {
         total_el *= shape[i];
@@ -77,27 +76,29 @@ Value cg_zeroes(double[] shape, int n_dim) {
 }
 
 void cg_set_parnt(Value* val, Value* prev_1) {
-    value->total_prev = 1 + prev_1->total_prev;
-    value->prev[0] = prev_1;
-    value->prev[1] = NULL;
+    val->total_prev = 1 + prev_1->total_prev;
+    val->prev[0] = prev_1;
+    val->prev[1] = NULL;
 }
 
 void cg_set_parnts(Value* val, Value* prev_1, Value* prev_2) {
-    value->total_prev = 2 + prev_1->total_prev + prev_2->total_prev;
-    value->prev[0] = prev_1;
-    value->prev[1] = prev_2;
+    val->total_prev = 2 + prev_1->total_prev + prev_2->total_prev;
+    val->prev[0] = prev_1;
+    val->prev[1] = prev_2;
 }
 
-double cg_get(Value* val, int[] path, int p_len) {
+double cg_get(Value* val, int* path, int p_len) {
     if (p_len != val->n_dim) {
-        CG_ERR = -1;
+        CG_ERRNO = -1;
         return 0;
     }
 
     int idx = 0;
 
-    for (int i = 0; i < p_len; i++) {
-        idx += val->shape[i] * path[i];
+    int stride = 1;
+    for (int i = val->n_dim - 1; i >= 0; i--) {
+        idx += path[i] * stride;
+        stride *= val->shape[i];
     }
 
     return val->data[idx];

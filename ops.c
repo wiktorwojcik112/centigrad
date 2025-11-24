@@ -13,7 +13,7 @@ Value cg_add(Value* val_1, Value* val_2) {
     } 
 
     Value res = cg_tensor(sum, val_1->shape, val_1->n_dim);
-    cg_set_parnts(res, val_1, val_2);
+    cg_set_parnts(&res, val_1, val_2);
 
     res.op = ADD;
 
@@ -32,7 +32,7 @@ Value cg_mul(Value* val_1, Value* val_2) {
 
 
     Value res = cg_tensor(mul, val_1->shape, val_1->n_dim);
-    cg_set_parnts(res, val_1, val_2);
+    cg_set_parnts(&res, val_1, val_2);
 
     res.op = MUL;
 
@@ -42,7 +42,8 @@ Value cg_mul(Value* val_1, Value* val_2) {
 }
 
 Value cg_pow(Value* val, double power) {
-    int total_el = cg_compatible(val_1, val_2);
+    int total_el = 1;
+    for (int i = 0; i < val->n_dim; i++) total_el *= val->shape[i];
 
     double* powrd = malloc(sizeof(double) * total_el);
     for (int i = 0; i < total_el; i++) {
@@ -51,7 +52,7 @@ Value cg_pow(Value* val, double power) {
 
 
     Value res = cg_tensor(powrd, val->shape, val->n_dim);
-    cg_set_parnt(res, val);
+    cg_set_parnt(&res, val);
 
     res.op = POW;
 
@@ -100,6 +101,8 @@ Value cg_div(Value* val_1, Value* val_2) {
 }
 
 void cg_free(Value* val) {
+    if (!val) return;
+
     if (val->prev[0] && val->prev[0]->is_alloc) {
         free(val->prev[0]); 
         val->prev[0] = NULL;
@@ -110,6 +113,7 @@ void cg_free(Value* val) {
         val->prev[1] = NULL;
     }
 
-    free(val->data);
-    free(val->grad);
+    if (val->data) free(val->data);
+    if (val->grad) free(val->grad);
+    if (val->shape) free(val->shape);
 }
