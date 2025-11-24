@@ -6,8 +6,15 @@
 
 void cg_backward(Value* value) {
     Value** topo = cg_build_topo(value);
+
+    int total_el = 1;
+    for (int i = 0; i < value->n_dim; i++) {
+        total_el *= value->shape[i];
+    }
     
-    value->grad = 1;
+    for (int i = 0; i < total_el; i++) {
+        value->grad[i] = 1;
+    }
 
     for (int i = 1; i <= value->total_prev; i++) {
         Value* out = topo[i];
@@ -15,17 +22,25 @@ void cg_backward(Value* value) {
         Value* prev_1 = out->prev[0];
         Value* prev_2 = out->prev[1];
 
+        int total_el = cg_compatible(prev_1, prev_2);
+
         switch (out->op) {
             case ADD:
-                prev_1->grad += out->grad;
-                prev_2->grad += out->grad;
+                for (int i = 0; i < total_el; i++) {
+                    prev_1->grad[i] += out->grad[i];
+                    prev_2->grad[i] += out->grad[i];
+                }
                 break;
             case MUL:
-                prev_1->grad += prev_2->data * out->grad;
-                prev_2->grad += prev_1->data * out->grad;
+                for (int i = 0; i < total_el; i++) {
+                    prev_1->grad[i] += prev_2->data[i] * out->grad[i];
+                    prev_2->grad[i] += prev_1->data[i] * out->grad[i];
+                }
                 break;
             case POW:
-                prev_1->grad += (prev_2->data * pow(prev_1->data, prev_2->data-1)) * out->grad;
+                for (int i = 0; i < total_el; i++) {
+                    prev_1->grad[i] += (prev_2->data[i] * pow(prev_1->data[i], prev_2->data[i] - 1)) * out->grad[i];
+                }
                 break;
             case NONE:
                 break;
